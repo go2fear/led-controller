@@ -32,6 +32,9 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-gradle-
 
+    - name: Generate Gradle Wrapper
+      run: ./gradlew wrapper --gradle-version 7.0
+
     - name: Build with Gradle
       run: ./gradlew build
 
