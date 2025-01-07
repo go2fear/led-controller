@@ -10,69 +10,45 @@ on:
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
+    name: Build APK
+    runs-on: ubuntu-latest  # 使用 Ubuntu 作为运行环境
 
     steps:
-      - uses: actions/checkout@v4
+      # 检出代码
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      # Set Current Date As Env Variable
-      - name: Set current date as env variable
-        run: echo "date_today=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
-
-      # Set Repository Name As Env Variable
-      - name: Set repository name as env variable
-        run: echo "repository_name=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
-
-      - name: Set Up JDK
-        uses: actions/setup-java@v4
+      # 设置 JDK 环境
+      - name: Set up JDK
+        uses: actions/setup-java@v3
         with:
-          distribution: 'zulu' # See 'Supported distributions' for available options
-          java-version: '17'
-          cache: 'gradle'
+          java-version: '11'  # 使用 Java 11
+          distribution: 'zulu'
 
-      - name: Change wrapper permissions
-        run: chmod +x ./gradlew
-
-      # Run Tests Build
-      - name: Run gradle tests
-        run: ./gradlew test
-
-      # Run Build Project
-      - name: Build gradle project
-        run: ./gradlew build
-
-      # Create APK Debug
-      - name: Build apk debug project (APK) - ${{ env.main_project_module }} module
-        run: ./gradlew assembleDebug
-
-      # Create APK Release
-      - name: Build apk release project (APK) - ${{ env.main_project_module }} module
-        run: ./gradlew assemble
-
-      # Create Bundle AAB Release
-      # Noted for main module build [main_project_module]:bundleRelease
-      - name: Build app bundle release (AAB) - ${{ env.main_project_module }} module
-        run: ./gradlew ${{ env.main_project_module }}:bundleRelease
-
-      # Upload Artifact Build
-      # Noted For Output [main_project_module]/build/outputs/apk/debug/
-      - name: Upload APK Debug - ${{ env.repository_name }}
-        uses: actions/upload-artifact@v4
+      # 缓存 Gradle 依赖
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v3
         with:
-          name: ${{ env.date_today }} - ${{ env.playstore_name }} - ${{ env.repository_name }} - APK(s) debug generated
-          path: ${{ env.main_project_module }}/build/outputs/apk/debug/
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
-      # Noted For Output [main_project_module]/build/outputs/apk/release/
-      - name: Upload APK Release - ${{ env.repository_name }}
-        uses: actions/upload-artifact@v4
+      # 下载并设置 Android SDK
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
         with:
-          name: ${{ env.date_today }} - ${{ env.playstore_name }} - ${{ env.repository_name }} - APK(s) release generated
-          path: ${{ env.main_project_module }}/build/outputs/apk/release/
+          api-level: 31  # Android API 级别
+          build-tools: 31.0.0  # 构建工具版本
+          ndk: false  # 如果需要 NDK，可以设为 true
 
-      # Noted For Output [main_project_module]/build/outputs/bundle/release/
-      - name: Upload AAB (App Bundle) Release - ${{ env.repository_name }}
-        uses: actions/upload-artifact@v4
+      # 构建 APK
+      - name: Build APK
+        run: ./gradlew assembleRelease  # 根据你的任务修改，例如 assembleDebug
+
+      # 将 APK 保存为构件
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.date_today }} - ${{ env.playstore_name }} - ${{ env.repository_name }} - App bundle(s) AAB release generated
-          path: ${{ env.main_project_module }}/build/outputs/bundle/release/
+          name: app-release.apk
+          path: app/build/outputs/apk/release/apprelease.apk
