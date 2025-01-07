@@ -22,7 +22,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
-          java-version: '17'  # 使用 Java 17
+          java-version: '17'  # 使用 Java 11
           distribution: 'zulu'
 
       # 缓存 Gradle 依赖
