@@ -33,7 +33,7 @@ jobs:
           ${{ runner.os }}-gradle-
 
     - name: Generate Gradle Wrapper
-      run: ./gradlew wrapper --gradle-version 7.0
+      run: ./gradlew wrapper --gradle-version 8.12
 
     - name: Build with Gradle
       run: ./gradlew build
